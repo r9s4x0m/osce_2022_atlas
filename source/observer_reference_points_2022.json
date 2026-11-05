@@ -1,0 +1,24 @@
+{
+  "purpose": "Approximate historical reference coordinates, NOT OSCE patrol GPS fixes. Longitude, latitude (WGS84). Names are reconciled against distance-to-Donetsk/Luhansk in the official annex.",
+  "additionalSettlements": [
+    {"name": "Лебединское", "aliases": ["лебединское", "лебединского"], "coordinates": [37.75472, 47.12694], "sourceUrl": "https://en.wikipedia.org/wiki/Lebedynske,_Mariupol_Raion,_Donetsk_Oblast"},
+    {"name": "Каменка", "aliases": ["каменка", "каменки"], "coordinates": [37.78571, 48.17346], "sourceUrl": "https://mapcarta.com/30572082"},
+    {"name": "Пески", "aliases": ["пески", "песков"], "coordinates": [37.67452, 48.06604], "sourceUrl": "https://mapcarta.com/30571810"},
+    {"name": "Молодежное", "aliases": ["молодежное", "молодежного"], "coordinates": [38.49590, 48.64434], "sourceUrl": "https://mapcarta.com/W30718025"},
+    {"name": "Чермалык", "aliases": ["чермалык", "чермалыка"], "coordinates": [37.80606, 47.31442], "sourceUrl": "https://www.osce.org/sites/default/files/f/documents/0/b/508991.pdf"},
+    {"name": "Гнутово", "aliases": ["гнутово", "гнутова"], "coordinates": [37.75011, 47.20699], "sourceUrl": "https://www.osce.org/sites/default/files/f/documents/0/b/508991.pdf"},
+    {"name": "Талаковка", "aliases": ["талаковка", "талаковки", "талаківка", "талаківки"], "coordinates": [37.72167, 47.18583], "sourceUrl": "https://www.wikidata.org/wiki/Q4450302"},
+    {"name": "Ломакино", "aliases": ["ломакино", "ломакине"], "coordinates": [37.72315, 47.17610], "sourceUrl": "https://mapcarta.com/31405754"},
+    {"name": "Мануйловка", "aliases": ["мануйловка", "мануйловки"], "coordinates": [38.66312, 47.96322], "sourceUrl": "https://mapcarta.com/W30716980"},
+    {"name": "Круглик", "aliases": ["круглик", "круглика"], "coordinates": [39.142975, 48.3118915], "sourceUrl": "https://lg.2ua.org/uk/kruglyk/mapa/sat/"},
+    {"name": "Катериновка", "aliases": ["катериновка", "катериновки"], "coordinates": [38.4813745, 48.664996], "sourceUrl": "https://lg.2ua.org/katerinovka_popasnyanskii/karta/google/"},
+    {"name": "Березовское", "aliases": ["березовское", "березовского"], "coordinates": [38.602651, 48.6719105], "sourceUrl": "https://lg.2ua.org/berezovskoe/karta/google/"},
+    {"name": "Черненко", "aliases": ["черненко"], "coordinates": [37.744562, 47.226040], "sourceUrl": "https://maps.visicom.ua/i/STL1NMCZZ"},
+    {"name": "Безыменное", "aliases": ["безыменное", "безыменного"], "coordinates": [37.93547, 47.10816], "sourceUrl": "https://mapcarta.com/13770040"},
+    {"name": "Веселое (Донецкий аэропорт)", "aliases": ["веселое", "веселого"], "coordinates": [37.72782, 48.06347], "sourceUrl": "https://mapcarta.com/30571812"}
+  ],
+  "landmarks": [
+    {"name": "Пассажирский ж/д вокзал Ясиноватой", "coordinates": [37.84524, 48.12198], "uncertaintyKm": 0.35, "sourceUrl": "https://www.wikidata.org/wiki/Q4539251"},
+    {"name": "Ж/д вокзал Донецка", "coordinates": [37.74557, 48.04418], "uncertaintyKm": 0.35, "sourceUrl": "https://www.wikidata.org/wiki/Q1981270"}
+  ]
+}

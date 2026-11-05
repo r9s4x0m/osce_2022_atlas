@@ -1,0 +1,5 @@
+# Runtime dependency versions verified against the 2022 Russian annex format.
+lxml==6.1.1
+pdfplumber==0.11.9
+numpy==2.3.5
+scipy==1.17.0

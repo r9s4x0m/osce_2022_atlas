@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#142a40">
+    <meta name="description" content="Интерактивный исторический анализ официальных наблюдений СММ ОБСЕ на Донбассе, январь — февраль 2022 года.">
+    <title>ОБСЕ · Донбасс · январь — февраль 2022</title>
+    <link rel="preconnect" href="https://tile.openstreetmap.org">
+    <link rel="stylesheet" href="./vendor/leaflet/leaflet.css">
+    <link rel="stylesheet" href="./style.css">
+    <script defer src="./vendor/leaflet/leaflet.js"></script>
+    <script defer src="./app.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="identity">
+        <div class="logo-mark" aria-hidden="true"><span></span><span></span></div>
+        <div>
+          <p class="overline">Архивный аналитический атлас</p>
+          <h1>СММ ОБСЕ <span class="title-divider">/</span> Донбасс</h1>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-period"><span class="live-dot"></span> 14–20 февраля 2022</span>
+        <button id="show-methodology" class="header-button" type="button">Источники и методика</button>
+        <button id="open-settings" class="header-button header-button-primary" type="button" aria-label="Настройка картографической подложки">Карта: <span id="basemap-label">OSM</span> <span aria-hidden="true">⌄</span></button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="sidebar" aria-label="Фильтры наблюдений">
+        <div class="sidebar-scroll">
+          <div class="sidebar-intro">
+            <span class="section-eyebrow">Исследование · до 24.02.2022</span>
+            <h2>Наблюдения накануне 24 февраля</h2>
+            <p>Сопоставление времени и характера зарегистрированных нарушений с местами наблюдения.</p>
+          </div>
+
+          <section class="overview" aria-label="Сводные показатели">
+            <div class="primary-stat"><span class="stat-label">Сумма «К-во» · по таблице ОБСЕ</span><strong id="stat-quantity">—</strong><span class="stat-note">В выбранном интервале и категориях</span></div>
+            <div class="secondary-stats">
+              <div><span>Строк наблюдений</span><strong id="stat-records">—</strong></div>
+              <div><span>С районом события</span><strong id="stat-mapped">—</strong></div>
+            </div>
+            <div class="territory-breakdown" aria-label="Сумма количества по предполагаемой территории">
+              <div class="territory-breakdown-title"><strong>По территории события</strong><span>∑ «К-во»</span></div>
+              <div id="territory-summary" aria-live="polite"></div>
+              <p class="territory-breakdown-foot">Ромбы на карте показывают эти же количества. <span id="mapped-quantity">—</span> размещено на карте; <span id="unmapped-quantity">—</span> без геопривязки.</p>
+            </div>
+          </section>
+
+          <section class="filter-section" aria-labelledby="period-heading">
+            <div class="section-heading"><h3 id="period-heading">Период наблюдений</h3><button type="button" class="text-button" id="reset-dates">Весь период</button></div>
+            <div class="date-grid">
+              <label>С <input id="date-from" type="datetime-local" min="2022-02-14T00:00" max="2022-02-21T00:00" value="2022-02-14T00:00" step="3600"></label>
+              <label>До (не включая) <input id="date-to" type="datetime-local" min="2022-02-14T00:00" max="2022-02-21T00:00" value="2022-02-21T00:00" step="3600"></label>
+            </div>
+            <p class="field-help">Время отчётов — EET (UTC+2). Окончание интервала не включается.</p>
+            <div class="preset-row" role="group" aria-label="Быстрый выбор периода">
+              <button type="button" class="preset" data-from="2022-01-01T00:00" data-to="2022-02-01T00:00">Январь</button>
+              <button type="button" class="preset" data-from="2022-02-01T00:00" data-to="2022-02-14T00:00">1–13 фев</button>
+              <button type="button" class="preset" data-from="2022-02-14T00:00" data-to="2022-02-17T00:00">14–16 фев</button>
+              <button type="button" class="preset" data-from="2022-02-17T00:00" data-to="2022-02-19T00:00">17–18 фев</button>
+              <button type="button" class="preset" data-from="2022-02-19T00:00" data-to="2022-02-21T00:00">19–20 фев</button>
+            </div>
+            <div class="heat-section">
+              <div class="heat-heading"><span>По дням · весь период</span><small>Нажмите на день</small></div>
+              <div class="heat-day-overview" id="heat-days" role="group" aria-label="Количество зарегистрированных нарушений по дням"></div>
+              <div class="heat-heading"><span>Распределение по часам</span><small>Выберите час</small></div>
+              <div class="heat-navigation"><button id="heat-prev" type="button" aria-label="Предыдущая неделя">‹</button><strong id="heat-week-label">—</strong><button id="heat-next" type="button" aria-label="Следующая неделя">›</button></div>
+              <div class="heatmap" id="heatmap" role="group" aria-label="Тепловая карта количества нарушений по часам и дням"></div>
+              <div class="heat-axis"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:00</span></div>
+            </div>
+          </section>
+
+          <section class="filter-section" aria-labelledby="incident-heading">
+            <div class="section-heading"><h3 id="incident-heading">Виды инцидентов</h3><button type="button" class="text-button" id="toggle-incidents">Снять все</button></div>
+            <div id="incident-filters" class="checklist"></div>
+          </section>
+
+          <section class="filter-section" aria-labelledby="method-heading">
+            <div class="section-heading"><h3 id="method-heading">Способ наблюдения</h3></div>
+            <div id="method-filters" class="checklist"></div>
+            <p class="field-help">Смешанные случаи не перераспределяются между двумя остальными категориями.</p>
+          </section>
+
+          <section class="filter-section" aria-labelledby="territory-heading">
+            <div class="section-heading"><h3 id="territory-heading">Предполагаемая территория события</h3><button type="button" class="text-button" id="toggle-territories">Снять все</button></div>
+            <div id="territory-filters" class="checklist"></div>
+            <p class="field-help">Это наша оценка по сектору наблюдения и историческому контуру, а не вывод ОБСЕ о стороне, открывшей огонь. «Вне участка разведения» не означает автоматически подконтрольную кому-либо территорию.</p>
+          </section>
+
+          <section class="filter-section layers-section" aria-labelledby="layers-heading">
+            <div class="section-heading"><h3 id="layers-heading">Слои карты</h3></div>
+            <label class="toggle-row"><input type="checkbox" id="layer-incidents" checked><span class="swatch diamond neutral"></span>События — ромбы <small>число = сумма «К-во»; центр приблизителен</small></label>
+            <label class="toggle-row"><input type="checkbox" id="layer-uncertainty" checked><span class="swatch uncertainty"></span>Неопределённость — полупрозрачные круги <small>расчётные области с запасом ±15% по дальности</small></label>
+            <label class="toggle-row"><input type="checkbox" id="layer-cameras" checked><span class="swatch dot blue"></span>Камеры ОБСЕ — круги <small>ориентировочные позиции, двойная обводка</small></label>
+            <label class="toggle-row"><input type="checkbox" id="layer-patrols" checked><span class="swatch dot neutral"></span>Позиции патрулей — круги <small>с учётом расстояния и направления от ориентира</small></label>
+            <label class="toggle-row"><input type="checkbox" id="layer-line" checked><span class="swatch line red"></span>Линия соприкосновения <small>по детальному контуру апреля 2021</small></label>
+            <label class="toggle-row"><input type="checkbox" id="layer-schematic"><span class="swatch line gray"></span>Схема ОБСЕ от 20.02.2022 <small>грубая геопривязка; в Майорске неточность</small></label>
+            <label class="toggle-row"><input type="checkbox" id="layer-area" checked><span class="swatch fill amber"></span>Вне контроля правительства Украины <small>контур апреля 2021</small></label>
+          </section>
+
+          <div class="sidebar-footer"><strong>Важно.</strong> Небольшие сплошные круги — наблюдатели; полупрозрачные крупные круги — приблизительная зона инцидента; ромбы с числами — сумма «К-во». Цвет — оценка территории, не стороны, ведущей огонь.</div>
+        </div>
+      </aside>
+
+      <section class="analysis" aria-label="Карта и журнал событий">
+        <div class="map-frame">
+          <div id="map" role="application" aria-label="Интерактивная карта наблюдателей, предполагаемых районов инцидентов и исторической линии соприкосновения"></div>
+          <div id="map-unavailable" class="map-unavailable" hidden><h3>Картографическая подложка недоступна</h3><p>Фильтры и журнал наблюдений продолжают работать. Проверьте соединение или выберите другую подложку.</p></div>
+          <div class="map-pill"><span class="small-square"></span> Наблюдатели ○ · события ◇ ∑ «К-во»</div>
+          <details class="map-legend" open><summary>Условные обозначения</summary>
+            <div class="legend-shapes"><span><span class="legend-symbol observer-symbol"></span> Наблюдатель</span><span><span class="legend-symbol event-symbol"></span> Событие (оценка)</span></div>
+            <div class="legend-explanation"><span class="legend-halo"></span> Полупрозрачный круг — пространственная неопределённость события; малый пунктир вокруг некоторых патрулей — условный допуск положения. Число у ромба — ∑ «К-во».</div>
+            <div class="legend-label">Цвет территории события</div>
+            <div class="legend-entry"><span class="legend-symbol event-symbol" style="--mark:#2668b5"></span>Подконтрольная — уверенно</div>
+            <div class="legend-entry"><span class="legend-symbol event-symbol" style="--mark:#6cb7dc"></span>Подконтрольная — вероятно</div>
+            <div class="legend-entry"><span class="legend-symbol event-symbol" style="--mark:#9098a5"></span>Принадлежность не установлена</div>
+            <div class="legend-entry"><span class="legend-symbol event-symbol" style="--mark:#e3a078"></span>Неподконтрольная — вероятно</div>
+            <div class="legend-entry"><span class="legend-symbol event-symbol" style="--mark:#c34b46"></span>Неподконтрольная — уверенно</div>
+            <p>Круги: синий — П, красный — Н, серый — нет надёжной метки. Двойной контур — камера.</p>
+          </details>
+          <div class="map-control-note" id="map-control-note">Современная подложка OSM. Исторические данные показаны отдельными слоями.</div>
+          <div id="selection-card" class="selection-card" hidden></div>
+        </div>
+
+        <section class="journal" aria-label="Журнал наблюдений">
+          <div class="journal-header">
+            <div><span class="section-eyebrow">Первичные записи</span><h2>Журнал наблюдений <span id="journal-count" class="count-pill">—</span></h2></div>
+            <div class="journal-actions"><input type="search" id="search-events" placeholder="Поиск по описанию или месту" aria-label="Поиск по журналу"><button type="button" id="export-csv" class="download-button">CSV <span aria-hidden="true">↓</span></button></div>
+          </div>
+          <div class="journal-table-wrap"><table class="journal-table"><thead><tr><th>Время (EET)</th><th>Наблюдение</th><th>К-во</th><th>Позиция / направление</th><th></th></tr></thead><tbody id="journal-body"></tbody></table></div>
+          <div class="journal-footer"><span id="journal-shown">—</span><button type="button" id="load-more" class="text-button">Показать ещё</button></div>
+        </section>
+      </section>
+    </main>
+
+    <dialog id="methodology" class="modal-dialog">
+      <form method="dialog" class="dialog-content">
+        <div class="dialog-top"><div><span class="section-eyebrow">Источники и ограничения</span><h2>Как читать эту карту</h2></div><button type="submit" class="close-button" aria-label="Закрыть">×</button></div>
+        <p id="methodology-source">В основе — <a href="https://docs.google.com/spreadsheets/d/12UFpinZWtTaa69D3JMANVHEa7lkPqVYaUIII-nCtZGs/edit" target="_blank" rel="noopener">таблица, предоставленная для исследования</a>, 743 строки с датами 14–20 февраля 2022 года. Исходные величины «К-во» суммируются; две строки не содержат числового количества и остаются в журнале. Наш атлас не проводит дополнительную дедупликацию, поэтому сумма сохраняет исходную трактовку ОБСЕ.</p>
+        <h3>Что показано на карте</h3>
+        <ul>
+          <li>Исторические ориентиры камер. Если ОБСЕ указывает, например, «1 км к ЮЗ от Широкино» или «2 км к В от Богдановки», положение камеры <strong>смещено от исходного населённого пункта</strong>. Координаты остаются приближёнными и не являются GPS-позициями камер.</li>
+          <li>Для мобильных наблюдателей применяются расстояние и азимут из <em>первой части описания позиции</em>: «3 км к С от Первомайска» означает 3 км на север от картографического центра Первомайска, а не точку внутри города. Отдельно учтены железнодорожные вокзалы Донецка и Ясиноватой; для «окраин» без указанного расстояния применяется явно обозначенное приблизительное смещение. Если исходный ориентир нельзя надёжно определить, точку не строим, но строка остаётся в статистике. <a href="https://github.com/r9s4x0m/osce_2022_atlas/blob/main/source/observer_reference_points_2022.json" target="_blank" rel="noopener">Каталог проверенных ориентиров</a> · <a href="./data/observer_locations.csv" target="_blank" rel="noopener">Аудит всех позиций (CSV)</a> · <a href="./data/unmapped_patrols.csv" target="_blank" rel="noopener"><strong>Все негеопривязанные патрули (CSV)</strong></a>.</li>
+          <li>Красная линия теперь извлечена из западного края детального контура территорий апреля 2021 года. По сравнению с прежней оцифровкой обзорной карты она корректно оставляет Майорский КПВВ на подконтрольной правительству стороне. Это всё же <strong>историческое приближение</strong>, а не подтверждённая точная линия на февраль 2022 года.</li>
+          <li><a href="https://www.osce.org/files/2022-02-20-21%20Daily%20Report_ENG.pdf" target="_blank" rel="noopener">Обзорная схема ОБСЕ от 20 февраля 2022 года</a> доступна отдельным выключенным по умолчанию слоем. Её геопривязка неточна, особенно возле Майорска. Статус Майорска подтверждается <a href="https://www.osce.org/sites/default/files/2022-01-30-31%20Daily%20Report.pdf" target="_blank" rel="noopener">ежедневным отчётом ОБСЕ от 31 января 2022 года</a>. Для КПВВ использованы опубликованные <a href="https://orionterrametrics.com/data/ukraine/society/ukraine-entry-exit-crossing-points-lvti" target="_blank" rel="noopener">координаты OCHA (2021)</a>, не GPS камеры.</li>
+          <li>Оранжевая заливка основана на <a href="https://services5.arcgis.com/SaBe5HMtmnbqSWlu/ArcGIS/rest/services/Russian_Controlled_Ukrainian_Territory/FeatureServer/0" target="_blank" rel="noopener">контуре апреля 2021 года</a> и служит лишь историческим ориентиром.</li>
+          <li><strong>Круги</strong> — приблизительные позиции камер и патрулей. Цвет берётся из официального описания ОБСЕ либо отдельно подтверждённого статуса. Для патруля в нескольких километрах <em>от</em> населённого пункта принята <strong>та же сторона, что и у названного ориентира</strong>; это рабочее допущение, а не отдельное GPS-подтверждение. Если сторона в отчёте не указана, её не придумываем. Дополнительные документы подтверждают неподконтрольную сторону для <a href="https://www.osce.org/special-monitoring-mission-to-ukraine/379156" target="_blank" rel="noopener">камеры у памятника князю Игорю</a> и <a href="https://www.osce.org/special-monitoring-mission-to-ukraine/491635" target="_blank" rel="noopener">камеры на шахте «Октябрьская»</a>. Колонка «Контроль» пользовательской таблицы <strong>не участвует в классификации</strong>.</li>
+          <li>Для патруля с указанным смещением от ориентира принят модельный радиус погрешности <strong>5% расстояния</strong>, то есть диаметр малого круга составляет <strong>10%</strong> (для 1 км — 100 м). Это исследовательское допущение, <strong>не калиброванный доверительный интервал ОБСЕ</strong>. Отдельная неопределённость картографического центра ориентира <em>не входит в малый круг патруля, но входит в круг неопределённости события и расчёт категории его территории</em>. Округление компасного направления патруля остаётся самостоятельным неучтённым источником неопределённости. Для патрулей с неизвестной дистанцией и камер действуют другие, более грубые оценки.</li>
+          <li><strong>Масштабная линейка</strong> в километрах автоматически обновляется при приближении и отдалении карты; на подложке Яндекса используется встроенное отображение масштаба.</li>
+          <li><strong>Ромбы</strong> — геометрические центры оценочных секторов событий, но не реальные точки взрывов или выстрелов. Близкие записи для удобства карты объединяются визуально, <strong>без объединения самих событий</strong>: число рядом с ромбом — сумма поля «К-во» входящих строк, а не число строк. Сумма чисел по ромбам совпадает с показателем «размещено на карте» в территориальной сводке, если слой событий включён. При выборе записи раскрывается её сектор.</li>
+          <li><strong>Полупрозрачные круги</strong> — модельные области пространственной неопределённости. Каждый охватывает расчётный сектор компасного направления с дополнительным запасом <strong>±15% к границам дальности</strong> и <strong>неопределённостью положения самого наблюдателя</strong>. Минимальный диаметр — 1 км. Это консервативная аппроксимация, а не вероятностный контур; допущение 15% — исследовательская гипотеза, <strong>не подтверждённая оценка точности наблюдателей ОБСЕ</strong>. Одинаковые области нескольких строк рисуются один раз, но все строки остаются в статистике.</li>
+          <li>Категория <strong>«уверенно»</strong> присваивается, когда <em>весь показанный круг неопределённости</em> лежит по одну сторону исторического контура. Если круг пересекает границу, возможны только «вероятно» или «принадлежность не установлена» — по доле сектора на каждой стороне. Это уверенность <strong>в рамках выбранной геометрической модели</strong>, а не доказанная принадлежность реального места происшествия: сам контур апреля 2021 года приблизителен. Контур и красная линия — <strong>один источник</strong>, не независимые подтверждения. Указание «вне участка разведения» не определяет сторону, ведущую огонь.</li>
+        </ul>
+        <h3>Время и интерпретация</h3>
+        <p>Все моменты заданы по восточноевропейскому времени (EET, UTC+2), как в ежедневных отчётах миссии. Строка с диапазоном времени попадает в выборку, если он пересекает выбранный полуоткрытый интервал. Географическая сторона наблюдателя не определяет сторону, совершившую обстрел. Категория <strong>«взрыв»</strong> не всегда означает подтверждённое попадание снаряда: ОБСЕ различала взрывы неопределённого происхождения, разрывы и другие типы. «Н/Д боеприпас» означает наблюдение <strong>снаряда в полёте</strong>, а не определённый прилёт или вылет.</p>
+        <p class="method-muted">Карта подготовлена для исторического анализа, а не для навигации или оперативного использования.</p>
+        <button class="primary-action" type="submit">Понятно</button>
+      </form>
+    </dialog>
+
+    <dialog id="settings" class="modal-dialog">
+      <div class="dialog-content">
+        <div class="dialog-top"><div><span class="section-eyebrow">Выбор подложки</span><h2>Картографическая основа</h2></div><button id="close-settings" type="button" class="close-button" aria-label="Закрыть">×</button></div>
+        <div class="basemap-option"><div><strong>OpenStreetMap</strong><span>Работает сразу, без API-ключа</span></div><button id="choose-osm" type="button" class="secondary-action">Использовать</button></div>
+        <div class="basemap-option yandex-option"><div><strong>Яндекс Карты · JavaScript API 3.0</strong><span>Требует собственного ключа JS API</span></div><span class="option-mark">API</span></div>
+        <label class="key-label" for="yandex-key">Ключ JavaScript API</label>
+        <input id="yandex-key" type="text" autocomplete="off" spellcheck="false" placeholder="Вставьте ключ Яндекс JS API">
+        <p class="field-help">В <a href="https://developer.tech.yandex.ru/" target="_blank" rel="noopener">кабинете разработчика</a> разрешите HTTP Referer домена этого сайта. Ключ вводится только в вашем браузере и хранится в пределах вкладки.</p>
+        <p id="map-api-status" class="dialog-status" role="status"></p>
+        <button id="choose-yandex" type="button" class="primary-action">Переключить на Яндекс</button>
+      </div>
+    </dialog>
+  </body>
+</html>
