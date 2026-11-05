@@ -282,7 +282,9 @@ function renderEverything() {
   if (!(to > from)) return;
   const query = state.search;
   filtered = events.filter(e => passesCategories(e) && e.startMs < to && e.endMs >= from && (!query || [e.position,e.where,e.description,e.incident,e.rawDate].some(x => String(x || "").toLowerCase().includes(query))));
-  filtered.sort((a, b) => b.startMs - a.startMs || b.id - a.id);
+  // Keep the journal, CSV export and marker popups in the same ascending
+  // event-time order, including records that span a time interval.
+  filtered.sort(chronological);
   if(selectedId!==null&&!filtered.some(e=>e.id===selectedId)){
     selectedId=null;$("#selection-card").hidden=true;
   }

@@ -25,7 +25,10 @@ OUT = ROOT / "dist" / "data"
 
 
 def normalize(value):
-    return re.sub(r"\s+", " ", str(value or "")).strip().lower().replace("ё", "е")
+    text = re.sub(r"\s+", " ", str(value or "")).strip().lower().replace("ё", "е")
+    # Annex OCR occasionally inserts a Latin 'a' in Cyrillic village names,
+    # e.g. Жaбуньки. Do not rewrite arbitrary Latin source text.
+    return re.sub(r"(?<=[а-я])a(?=[а-я])", "а", text)
 
 
 # Gazetteer of approximate settlement centres, not reconstructed patrol GPS.
@@ -39,7 +42,7 @@ TOWNS = [
     ("Кадиевка", (38.645, 48.568), ["кадиевка", "кадиевки", "стаханов"]),
     ("Первомайск", (38.566, 48.629), ["первомайск", "первомайска"]),
     ("Попасная", (38.37770, 48.63227), ["попасная", "попасной"]),
-    ("Золотое", (38.51216, 48.69011), ["золотое", "золотого", "золотое-2", "золотое-3", "золотое-4", "золотое-5", "золотое 5"]),
+    ("Золотое", (38.51216, 48.69011), ["золотое", "золотого"]),
     ("Счастье", (39.231, 48.736), ["счастье", "счастья"]),
     ("Светлодарск", (38.22349, 48.43803), ["светлодарск", "светлодарска"]),
     ("Авдеевка", (37.74667, 48.13388), ["авдеевка", "авдеевки"]),
@@ -57,6 +60,32 @@ REFERENCE_POINTS = json.loads((SOURCE / "observer_reference_points_2022.json").r
 TOWNS.extend((item["name"], tuple(item["coordinates"]), item["aliases"])
              for item in REFERENCE_POINTS["additionalSettlements"])
 TOWN_REFERENCES = {item["name"]: item["sourceUrl"] for item in REFERENCE_POINTS["additionalSettlements"]}
+REGISTRY = json.loads((SOURCE / "osce_2022_referenced_settlements.json").read_text(encoding="utf-8"))
+
+
+def settlement_forms(name):
+    """Generate a few predictable Russian case forms for an exact village name.
+
+    These forms are for lexical lookup only. Geography is selected separately
+    using the reference distance and bearing actually stated by the OSCE.
+    """
+    primary = normalize(name.split(" (")[0])
+    forms = {primary}
+    endings = (("ское", "ского"), ("цкое", "цкого"), ("ое", "ого"),
+               ("ая", "ой"), ("яя", "ей"), ("ка", "ки"),
+               ("ово", "ова"), ("ево", "ева"), ("о", "а"),
+               ("ь", "я"), ("й", "я"))
+    for before, after in endings:
+        if primary.endswith(before):
+            forms.add(primary[:-len(before)] + after)
+            break
+    return forms
+
+
+for name, coordinates, katotth, osm_id in REGISTRY["settlements"]:
+    aliases = settlement_forms(name) | set(REGISTRY["aliases"].get(name, []))
+    TOWNS.append((name, tuple(coordinates), sorted(aliases, key=len, reverse=True)))
+    TOWN_REFERENCES[name] = f"https://www.openstreetmap.org/node/{osm_id}"
 LANDMARKS = {item["name"]: item for item in REFERENCE_POINTS["landmarks"]}
 
 CAMERA_SOURCE = json.loads((SOURCE / "previous_approximate_locations.geojson").read_text(encoding="utf-8"))
@@ -124,7 +153,7 @@ SINGLE_KM_RE = re.compile(r"(\d+(?:[,.]\d+)?)\s*км")
 SINGLE_METERS_RE = re.compile(r"(\d+(?:[,.]\d+)?)\s*м(?!\w)")
 OBSERVER_OFFSET_RE = re.compile(
     r"(?<!\w)(?P<distance>\d+(?:[,.]\d+)?)\s*(?P<unit>км|м)\s+"
-    r"(?:к|на)\s+(?P<bearing>ССВ|ВСВ|ВЮВ|ЮЮВ|ЮЮЗ|ЗЮЗ|ЗСЗ|ССЗ|СВ|ЮВ|ЮЗ|СЗ|С|В|Ю|З|"
+    r"(?:(?:к|на)\s+)?(?P<bearing>ССВ|ВСВ|ВЮВ|ЮЮВ|ЮЮЗ|ЗЮЗ|ЗСЗ|ССЗ|СВ|ЮВ|ЮЗ|СЗ|С|В|Ю|З|"
     r"северу|югу|востоку|западу|северо-востоку|северо-западу|"
     r"юго-востоку|юго-западу)\s+от\s+(?P<reference>.+)$", re.I
 )
@@ -132,10 +161,18 @@ WORD_BEARINGS = {"северу": 0, "северо-востоку": 45, "вост
                  "юго-востоку": 135, "югу": 180, "юго-западу": 225,
                  "западу": 270, "северо-западу": 315}
 CAPITAL_REFERENCE_RE = re.compile(
-    r"\b(?P<distance>\d+(?:[,.]\d+)?)\s*км\s+к\s+[а-яё-]+\s+от\s+"
+    r"\b(?P<distance>\d+(?:[,.]\d+)?)\s*км\s+к\s+(?P<bearing>[а-яё-]+)\s+от\s+"
     r"(?P<capital>донецка|луганска)\b"
 )
 CAPITAL_POINTS = {"донецка": [37.80290, 48.01590], "луганска": [39.30730, 48.566]}
+CAPITAL_BEARINGS = {**{k.lower(): v for k, v in COMPASS.items()},
+                    "северу": 0, "северо-востоку": 45, "востоку": 90,
+                    "юго-востоку": 135, "югу": 180, "юго-западу": 225,
+                    "западу": 270, "северо-западу": 315,
+                    "северо-северо-востоку": 22.5, "востоко-северо-востоку": 67.5,
+                    "востоко-юго-востоку": 112.5, "юго-юго-востоку": 157.5,
+                    "юго-юго-западу": 202.5, "западо-юго-западу": 247.5,
+                    "западо-северо-западу": 292.5, "северо-северо-западу": 337.5}
 EDGE_RE = re.compile(r"(?<!\w)(ССВ|ВСВ|ВЮВ|ЮЮВ|ЮЮЗ|ЗЮЗ|ЗСЗ|ССЗ|СВ|ЮВ|ЮЗ|СЗ|С|В|Ю|З)\s+(?:окраин[аые]|част[ьи])\b", re.I)
 TOWN_EDGE_ESTIMATES_KM = {"Попасная": 1.4, "Первомайск": 1.6, "Кадиевка": 2.3,
                            "Станица Луганская": 0.9, "Горловка": 3.5,
@@ -209,8 +246,16 @@ def distance_km(a, b):
     return 12742 * math.asin(min(1, math.sqrt(h)))
 
 
+def bearing_deg(start, end):
+    lat1, lat2 = map(math.radians, (start[1], end[1]))
+    delta_lon = math.radians(end[0] - start[0])
+    return math.degrees(math.atan2(math.sin(delta_lon) * math.cos(lat2),
+                                  math.cos(lat1) * math.sin(lat2) -
+                                  math.sin(lat1) * math.cos(lat2) * math.cos(delta_lon))) % 360
+
+
 def matches_reported_reference_distance(position, reference_point):
-    """Reject a plausible namesake whose place-to-capital distance conflicts.
+    """Reject a namesake whose place-to-capital distance or bearing conflicts.
 
     The OSCE's '(45 km SE of Donetsk)' describes the *reference settlement*,
     not a camera/patrol displaced from it. Thus compare with the anchor, not
@@ -222,15 +267,35 @@ def matches_reported_reference_distance(position, reference_point):
         return True
     distance = float(match["distance"].replace(",", "."))
     actual = distance_km(reference_point, CAPITAL_POINTS[match["capital"]])
-    return abs(actual - distance) <= max(15.0, 0.12 * distance)
+    if abs(actual - distance) > max(12.0, 0.12 * distance):
+        return False
+    # Eight-direction OSCE descriptions are approximate (sometimes far coarser
+    # than the 16-point bearings in incident sectors). Reject a clearly wrong
+    # quadrant, but retain a generous allowance for those coarse descriptions.
+    expected = CAPITAL_BEARINGS.get(match["bearing"])
+    if expected is not None:
+        measured = bearing_deg(CAPITAL_POINTS[match["capital"]], reference_point)
+        if abs((measured - expected + 180) % 360 - 180) > 48:
+            return False
+    return True
 
 
-def named_town(text):
-    """Match one unambiguous place name, never a name embedded in another."""
+def named_town(text, full_position=None):
+    """Match an exact toponym; use OSCE geography to reject namesakes."""
     matches = {}
+    longest_alias = 0
     for title, coordinates, aliases in TOWNS:
-        if any(re.search(r"(?<!\w)" + re.escape(alias) + r"(?!\w)", text) for alias in aliases):
-            matches[title] = (title, coordinates)
+        found = max((len(alias) for alias in aliases
+                     if re.search(r"(?<!\w)" + re.escape(alias) + r"(?!\w)", text)), default=0)
+        if found:
+            if found > longest_alias:
+                matches.clear()
+                longest_alias = found
+            if found == longest_alias:
+                matches[title] = (title, coordinates)
+    if full_position is not None:
+        matches = {key: town for key, town in matches.items()
+                   if matches_reported_reference_distance(full_position, town[1])}
     return next(iter(matches.values())) if len(matches) == 1 else None
 
 
@@ -239,7 +304,7 @@ def site_key(kind, *parts):
     return kind + "_" + hashlib.sha1(canonical.encode("utf-8")).hexdigest()[:11]
 
 
-def observer_offset(primary):
+def observer_offset(primary, full_position=None):
     """Locate an observer relative to the ACTUAL landmark in the first clause.
 
     In '3 km N of Pervomaisk (58 km W of Luhansk)' the 58 km refers to
@@ -272,8 +337,12 @@ def observer_offset(primary):
                   "coordinates": destination([39.4995, 48.62194], 337.5, 1.0),
                   "uncertaintyKm": 0.65,
                   "sourceUrl": "https://www.osce.org/special-monitoring-mission-to-ukraine/424916"}
+    elif "кпвв" in reference and "счасть" in reference:
+        anchor = LANDMARKS["КПВВ Счастье"]
+    elif "кпвв" in reference and "золот" in reference:
+        anchor = LANDMARKS["КПВВ Золотое"]
     elif not any(token in reference for token in ["кпвв", "блокпост", "вокзал", "станци", "мост"]):
-        town = named_town(reference)
+        town = named_town(reference, full_position or primary)
         if town:
             title, coordinates = town
             anchor = {"name": title, "coordinates": coordinates,
@@ -445,13 +514,13 @@ def location_of(position):
     # importer. Never misread '... от Донецка)' as a Donetsk observer.
     if primary.startswith(("правительству,", "неподконтрольный ", "подконтрольный ")):
         return None
-    # Zolote-2/3/4/5 are different neighbourhoods on opposite sides of the
-    # contact line. Without independently verified local anchors, pinning all
-    # of them to the general Zolote centre produces a false territory label.
-    if re.search(r"золотое\s*[-–]?\s*[2345]\b", primary):
+    # The named Zolote-2/3/4/5 neighbourhoods have separate references in
+    # observer_reference_points_2022.json. Never use general Zolote as a
+    # fallback for a numbered district if its own anchor is missing.
+    if re.search(r"золотое\s*[-–]?\s*[2345]\b", primary) and not named_town(primary, n):
         return None
 
-    offset = observer_offset(primary)
+    offset = observer_offset(primary, n)
     if offset and not matches_reported_reference_distance(n, offset["reference"]):
         return None
     camera = CAMERA_BY_ORIGINAL.get(n)
@@ -502,7 +571,21 @@ def location_of(position):
     if OBSERVER_OFFSET_RE.search(primary) or primary.startswith("камера смм"):
         return None
 
-    town = named_town(primary)
+    # Match only explicitly validated checkpoints with standalone coordinates.
+    # Their map anchor does not come from the settlement's approximate centre.
+    if re.search(r"\bкпвв\b", primary) and "золот" in primary:
+        anchor = LANDMARKS["КПВВ Золотое"]
+        return {"site_id": site_key("checkpoint", anchor["name"]),
+                "title": anchor["name"], "point": anchor["coordinates"],
+                "type": "patrol", "accuracy_km": anchor["uncertaintyKm"],
+                "basis": ("Приблизительные координаты именно КПВВ по OCHA (2021), "
+                          "не GPS-позиция конкретного патруля"),
+                "referenceUrl": anchor["sourceUrl"]}
+    # A checkpoint is not the settlement itself: its location must be verified
+    # as a distinct landmark before mapping, even if the settlement is known.
+    if re.search(r"\b(?:кпвв|блокпост)\b", primary):
+        return None
+    town = named_town(primary, n)
     if town:
         title, coordinates = town
         if not matches_reported_reference_distance(n, coordinates):
@@ -529,21 +612,24 @@ def diagnose_unmapped_position(position):
     primary = n.split("(")[0].strip()
     if primary.startswith(("правительству,", "неподконтрольный ", "подконтрольный ")):
         return "Обрыв описания позиции в приложении ОБСЕ"
-    if re.search(r"золотое\s*[-–]?\s*[2345]\b", primary):
-        return "Отдельный район Золотого: нельзя подменять общим центром"
+    if re.search(r"золотое\s*[-–]?\s*[2345]\b", primary) and not named_town(primary, n):
+        return "Отдельный район Золотого: нет проверенного ориентира"
     offset_match = OBSERVER_OFFSET_RE.search(primary)
     if offset_match:
         ref = normalize(offset_match["reference"])
         special = any(word in ref for word in ("кпвв", "блокпост", "вокзал", "станци", "мост"))
-        if special and not observer_offset(primary):
+        if special and not observer_offset(primary, n):
             return "Не определена точка специального ориентира (КПВВ / станция / мост)"
-        anchor = observer_offset(primary)
+        anchor = observer_offset(primary, n)
         if anchor and not matches_reported_reference_distance(n, anchor["reference"]):
             return "Картографический одноимённый ориентир не совпадает с удалённостью в отчёте"
         if not anchor:
+            unqualified = observer_offset(primary)
+            if unqualified and not matches_reported_reference_distance(n, unqualified["reference"]):
+                return "Картографический одноимённый ориентир не совпадает с удалённостью в отчёте"
             return "Не найден проверенный ориентир для указанного смещения"
         return "Не удалось привязать относительную позицию"
-    town = named_town(primary)
+    town = named_town(primary, n)
     if town and not matches_reported_reference_distance(n, town[1]):
         return "Картографический одноимённый ориентир не совпадает с удалённостью в отчёте"
     if any(word in primary for word in ("кпвв", "блокпост", "вокзал", "станци", "мост")):

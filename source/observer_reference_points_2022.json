@@ -15,10 +15,18 @@
     {"name": "Березовское", "aliases": ["березовское", "березовского"], "coordinates": [38.602651, 48.6719105], "sourceUrl": "https://lg.2ua.org/berezovskoe/karta/google/"},
     {"name": "Черненко", "aliases": ["черненко"], "coordinates": [37.744562, 47.226040], "sourceUrl": "https://maps.visicom.ua/i/STL1NMCZZ"},
     {"name": "Безыменное", "aliases": ["безыменное", "безыменного"], "coordinates": [37.93547, 47.10816], "sourceUrl": "https://mapcarta.com/13770040"},
-    {"name": "Веселое (Донецкий аэропорт)", "aliases": ["веселое", "веселого"], "coordinates": [37.72782, 48.06347], "sourceUrl": "https://mapcarta.com/30571812"}
+    {"name": "Веселое (Донецкий аэропорт)", "aliases": ["веселое", "веселого"], "coordinates": [37.72782, 48.06347], "sourceUrl": "https://mapcarta.com/30571812"},
+    {"name": "Золотое-2 (Карбонит)", "aliases": ["золотое-2", "золотое 2", "карбонит"], "coordinates": [38.485, 48.72236], "sourceUrl": "https://mapcarta.com/N12638008882"},
+    {"name": "Золотое-3 (Стахановец)", "aliases": ["золотое-3", "золотое 3", "стахановец"], "coordinates": [38.47614, 48.68119], "sourceUrl": "https://mapcarta.com/N5734653321"},
+    {"name": "Золотое-4 (Родина; ориентир — шахта)", "aliases": ["золотое-4", "золотое 4", "родина"], "coordinates": [38.5373, 48.68457], "sourceUrl": "https://mapcarta.com/de/W509862883"},
+    {"name": "Золотое-5 (Михайловка)", "aliases": ["золотое-5", "золотое 5", "михайловка"], "coordinates": [38.5609, 48.67324], "sourceUrl": "https://mapcarta.com/N5132772964"},
+    {"name": "Азаровка", "aliases": ["азаровка", "азаровки"], "coordinates": [39.07871, 48.33778], "sourceUrl": "https://mapcarta.com/13771822"},
+    {"name": "Петровский район Донецка", "aliases": ["петровский", "петровского", "петровский район"], "coordinates": [37.617, 47.9514], "sourceUrl": "https://mapcarta.com/13740252"}
   ],
   "landmarks": [
     {"name": "Пассажирский ж/д вокзал Ясиноватой", "coordinates": [37.84524, 48.12198], "uncertaintyKm": 0.35, "sourceUrl": "https://www.wikidata.org/wiki/Q4539251"},
-    {"name": "Ж/д вокзал Донецка", "coordinates": [37.74557, 48.04418], "uncertaintyKm": 0.35, "sourceUrl": "https://www.wikidata.org/wiki/Q1981270"}
+    {"name": "Ж/д вокзал Донецка", "coordinates": [37.74557, 48.04418], "uncertaintyKm": 0.35, "sourceUrl": "https://www.wikidata.org/wiki/Q1981270"},
+    {"name": "КПВВ Счастье", "coordinates": [39.24383818, 48.73570463], "uncertaintyKm": 0.2, "sourceUrl": "https://orionterrametrics.com/data/ukraine/society/ukraine-entry-exit-crossing-points-lvti"},
+    {"name": "КПВВ Золотое", "coordinates": [38.51311668, 48.68016187], "uncertaintyKm": 0.25, "sourceUrl": "https://orionterrametrics.com/data/ukraine/society/ukraine-entry-exit-crossing-points-lvti"}
   ]
 }

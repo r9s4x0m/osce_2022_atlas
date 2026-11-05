@@ -201,8 +201,49 @@ class BuilderTests(unittest.TestCase):
         self.assertAlmostEqual(station["point"][1], p[1], places=5)
         self.assertIn("вокзал", station["basis"])
         self.assertIsNone(builder.location_of("примерно 2 км к В от КПВВ в неизвестном н. п."))
-        self.assertIsNone(builder.location_of(
-            "н. п. Золотое-4 (Родина; подконтрольный правительству, 62 км к З от Луганска)"))
+        rodina = builder.location_of(
+            "н. п. Золотое-4 (Родина; подконтрольный правительству, 62 км к З от Луганска)")
+        self.assertIsNotNone(rodina)
+        self.assertAlmostEqual(rodina["point"][0], 38.5373, places=4)
+        self.assertIn("Родина", rodina["title"])
+
+    def test_numbered_zolote_districts_have_separate_verified_anchors(self):
+        descriptions = [
+            "Золотое-2/Карбонит (подконтрольный правительству, 62 км к З от Луганска)",
+            "Золотое-3/Стахановец (подконтрольный правительству, 61 км к З от Луганска)",
+            "Золотое-4/Родина (подконтрольный правительству, 62 км к З от Луганска)",
+            "Золотое-5/Михайловка (неподконтрольный правительству, 60 км к З от Луганска)",
+        ]
+        points = [builder.location_of(position) for position in descriptions]
+        self.assertTrue(all(points))
+        self.assertEqual(len({tuple(point["point"]) for point in points}), 4)
+        self.assertGreater(builder.distance_km(points[0]["point"], points[3]["point"]), 5)
+        location = builder.location_of("примерно 2 км ВЮВ от Золотое 5 "
+                                      "(неподконтрольный правительству, 61 км к СЗ от Луганска)")
+        self.assertIsNotNone(location)
+        self.assertAlmostEqual(location["accuracy_km"], 0.1)
+
+    def test_verified_namesake_disambiguation_and_checkpoint(self):
+        northern = builder.location_of("Василевка (неподконтрольный правительству, 20 км к С от Донецка)")
+        southern = builder.location_of("Василевка (неподконтрольный правительству, 47 км к Ю от Донецка)")
+        self.assertIsNotNone(northern)
+        self.assertIsNotNone(southern)
+        self.assertGreater(builder.distance_km(northern["point"], southern["point"]), 50)
+        district = builder.location_of("3 км к ССВ от Петровский "
+                                       "(неподконтрольный правительству, 15 км к ЮЗ от Донецка)")
+        self.assertIsNotNone(district)
+        self.assertIn("Петровский район", district["title"])
+        checkpoint = builder.location_of("2 км к В от КПВВ в н. п. Счастье "
+                                         "(подконтрольный правительству, 20 км к С от Луганска)")
+        self.assertIsNotNone(checkpoint)
+        self.assertIn("КПВВ Счастье", checkpoint["title"])
+        zolote_checkpoint = builder.location_of(
+            "КПВВ на Ю окраине н. п. Золотое (подконтрольный правительству, 60 км к З от Луганска)")
+        self.assertIsNotNone(zolote_checkpoint)
+        self.assertAlmostEqual(zolote_checkpoint["point"][0], 38.51311668)
+        # Unverified checkpoints must never be replaced with town centres.
+        self.assertIsNone(builder.location_of("КПВВ в н. п. Оленовка "
+                                              "(неподконтрольный правительству, 23 км к ЮЗ от Донецка)"))
 
     def test_identically_named_villages_checked_against_reported_capital_distance(self):
         # The airport-side Vesele is 9 km NW of Donetsk, whereas the February
@@ -213,7 +254,8 @@ class BuilderTests(unittest.TestCase):
             "примерно в 1,5 км к ССЗ от н. п. Веселое "
             "(неподконтрольный правительству, 45 км к ЮВ от Донецка)")
         self.assertIsNotNone(near)
-        self.assertIsNone(far)
+        self.assertIsNotNone(far)
+        self.assertGreater(builder.distance_km(near["point"], far["point"]), 30)
         self.assertIsNone(builder.location_of("правительству, 84 км к В от Донецка)"))
 
     def test_two_different_hnutove_cameras_remain_distinct(self):
@@ -284,10 +326,10 @@ class BuilderTests(unittest.TestCase):
         self.assertIn("справочнике", builder.diagnose_unmapped_position(
             "н. п. Неизвестное (подконтрольный правительству)"))
         self.assertIn("район Золотого", builder.diagnose_unmapped_position(
-            "н. п. Золотое-4 (Родина; подконтрольный правительству)"))
-        self.assertIn("удалённостью", builder.diagnose_unmapped_position(
+            "н. п. Золотое-4 (Родина; подконтрольный правительству, 10 км к ЮЗ от Луганска)"))
+        self.assertIsNone(builder.location_of(
             "примерно 1,5 км к ССЗ от н. п. Веселое "
-            "(неподконтрольный правительству, 45 км к ЮВ от Донецка)"))
+            "(неподконтрольный правительству, 95 км к СЗ от Донецка)"))
 
     def test_observer_control_only_from_explicit_osce_description(self):
         self.assertEqual(official_control_from_position("Майорск (подконтрольный правительству)")[0], "П")
@@ -297,6 +339,13 @@ class BuilderTests(unittest.TestCase):
     def test_time_range(self):
         start, end = parse_time("01.01, 16:14–16:15")
         self.assertEqual((start, end), ("2022-01-01T16:14", "2022-01-01T16:15"))
+
+    def test_journal_and_popup_both_use_ascending_chronology(self):
+        app = (builder.ROOT / "dist" / "app.js").read_text(encoding="utf-8")
+        self.assertIn("const chronological = (a,b) => a.startMs - b.startMs || a.id - b.id", app)
+        self.assertIn("filtered.sort(chronological)", app)
+        self.assertIn("[...group.events].sort(chronological)", app)
+        self.assertIn("[...site.events].sort(chronological)", app)
 
     def test_aggregates_balance(self):
         row = {"start": "2022-01-01T12:00", "quantity": 4, "incidentPoint": None,
