@@ -48,6 +48,7 @@ jobs:
             dist/data/analysis.json
             dist/data/daily.csv
             dist/data/observer_locations.csv
+            dist/data/unmapped_patrols.csv
             dist/data/provenance.json
           if-no-files-found: ignore
           retention-days: 30

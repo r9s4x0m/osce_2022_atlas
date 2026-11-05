@@ -218,6 +218,11 @@ class BuilderTests(unittest.TestCase):
         self.assertLess(near_shyrokyne["point"][0], 37.80810)
         self.assertEqual(east_bohdanivka["site_id"], "smm_camera_bohdanivka")
         self.assertGreater(east_bohdanivka["point"][0], 37.80)
+        # A generic 'southern part of the disengagement area' is not a
+        # surveyed camera fix and must not map to the Zolote town centre.
+        self.assertIsNone(builder.location_of(
+            "камера СММ в Ю части участка разведения в районе н. п Золотое "
+            "(60 км к З от Луганска)"))
 
     def test_village_and_station_offsets_are_not_conflated(self):
         station = builder.location_of(
@@ -268,9 +273,33 @@ class BuilderTests(unittest.TestCase):
             "КПВВ на Ю окраине н. п. Золотое (подконтрольный правительству, 60 км к З от Луганска)")
         self.assertIsNotNone(zolote_checkpoint)
         self.assertAlmostEqual(zolote_checkpoint["point"][0], 38.51311668)
-        # Unverified checkpoints must never be replaced with town centres.
-        self.assertIsNone(builder.location_of("КПВВ в н. п. Оленовка "
+        # The Olenivka checkpoint has an independent H20 road geolocation;
+        # its coordinates must never be substituted with the town centre.
+        olenivka = builder.location_of("КПВВ в н. п. Оленовка "
+                                       "(неподконтрольный правительству, 23 км к ЮЗ от Донецка)")
+        self.assertIsNotNone(olenivka)
+        self.assertAlmostEqual(olenivka["point"][0], 37.6471531, places=6)
+        self.assertAlmostEqual(olenivka["point"][1], 47.8224769, places=6)
+        self.assertAlmostEqual(olenivka["accuracy_km"], 0.45)
+        self.assertIn("блокпоста", olenivka["basis"])
+        # OSCE 27-Apr-2016: checkpoint 650 m south of the incident site;
+        # independently geolocated coordinates are about 610 m apart.
+        geolocated_incident = [37.6482448, 47.8279118]
+        self.assertAlmostEqual(builder.distance_km(olenivka["point"], geolocated_incident),
+                               0.65, delta=0.10)
+        self.assertIsNone(builder.location_of("КПВВ в н. п. Неизвестное "
                                               "(неподконтрольный правительству, 23 км к ЮЗ от Донецка)"))
+        kreminets = builder.location_of("блокпост вблизи н. п. Кременец "
+                                       "(неподконтрольный правительству, 16 км к ЮЗ от Донецка)")
+        self.assertIsNotNone(kreminets)
+        self.assertAlmostEqual(kreminets["point"][0], 37.65937, places=5)
+        self.assertAlmostEqual(kreminets["point"][1], 47.91013, places=5)
+        self.assertEqual(kreminets["accuracy_km"], 0.8)
+        self.assertIn("Гипотеза", kreminets["basis"])
+        self.assertAlmostEqual(builder.distance_km(builder.CAPITAL_POINTS["донецка"],
+                                                   kreminets["point"]), 16, delta=1.0)
+        self.assertAlmostEqual(builder.distance_km([37.64534, 47.92048],
+                                                   kreminets["point"]), 1.55, delta=0.25)
 
     def test_identically_named_villages_checked_against_reported_capital_distance(self):
         # The airport-side Vesele is 9 km NW of Donetsk, whereas the February
@@ -357,6 +386,8 @@ class BuilderTests(unittest.TestCase):
         self.assertIsNone(builder.location_of(
             "примерно 1,5 км к ССЗ от н. п. Веселое "
             "(неподконтрольный правительству, 95 км к СЗ от Донецка)"))
+        self.assertIsNone(builder.location_of("блокпост вблизи н. п. Неизвестное "
+                                              "(неподконтрольный правительству)"))
 
     def test_observer_control_only_from_explicit_osce_description(self):
         self.assertEqual(official_control_from_position("Майорск (подконтрольный правительству)")[0], "П")

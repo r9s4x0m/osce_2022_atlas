@@ -28,6 +28,8 @@
     {"name": "Пассажирский ж/д вокзал Ясиноватой", "coordinates": [37.84524, 48.12198], "uncertaintyKm": 0.35, "sourceUrl": "https://www.wikidata.org/wiki/Q4539251"},
     {"name": "Ж/д вокзал Донецка", "coordinates": [37.74557, 48.04418], "uncertaintyKm": 0.35, "sourceUrl": "https://www.wikidata.org/wiki/Q1981270"},
     {"name": "КПВВ Счастье", "coordinates": [39.24383818, 48.73570463], "uncertaintyKm": 0.2, "sourceUrl": "https://orionterrametrics.com/data/ukraine/society/ukraine-entry-exit-crossing-points-lvti"},
-    {"name": "КПВВ Золотое", "coordinates": [38.51311668, 48.68016187], "uncertaintyKm": 0.25, "sourceUrl": "https://orionterrametrics.com/data/ukraine/society/ukraine-entry-exit-crossing-points-lvti"}
+    {"name": "КПВВ Золотое", "coordinates": [38.51311668, 48.68016187], "uncertaintyKm": 0.25, "sourceUrl": "https://orionterrametrics.com/data/ukraine/society/ukraine-entry-exit-crossing-points-lvti"},
+    {"name": "КПВВ Оленовка", "coordinates": [37.6471531, 47.8224769], "uncertaintyKm": 0.45, "sourceUrl": "https://antikor.ua/ru/articles/101312-bloger_dokazal_chto_elenovku_obstreljali_kremlevskie_terroristy", "corroborationUrl": "https://www.osce.org/ru/node/236936", "method": "Опубликованная геопривязка блокпоста 2016 года на Н-20; от геопривязанного места происшествия 2016 года ~610 м, в официальном отчёте ОБСЕ указано 650 м. Положение в феврале 2022 года принято приблизительно."},
+    {"name": "Блокпост Кременец (Н-15)", "coordinates": [37.65937, 47.91013], "uncertaintyKm": 0.8, "sourceUrl": "https://www.osce.org/ru/node/501241", "cartographicSourceUrl": "https://www.openstreetmap.org/search?lat=47.91013&lon=37.65937&zoom=15#map=15/47.91699/37.65253", "method": "Гипотеза: пересечение Н-15 с дорогой, ведущей на север к комбинату Каргилл. ОБСЕ подтверждает Н-15 возле комбината, но не координаты перекрёстка. Радиус 800 м охватывает возможный участок блокпоста, точность не измерена."}
   ]
 }

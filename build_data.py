@@ -581,6 +581,30 @@ def location_of(position):
                 "basis": ("Приблизительные координаты именно КПВВ по OCHA (2021), "
                           "не GPS-позиция конкретного патруля"),
                 "referenceUrl": anchor["sourceUrl"]}
+    if re.search(r"\bкпвв\b", primary) and ("оленовк" in primary or "еленовк" in primary):
+        anchor = LANDMARKS["КПВВ Оленовка"]
+        if not matches_reported_reference_distance(n, anchor["coordinates"]):
+            return None
+        return {"site_id": site_key("checkpoint", anchor["name"]),
+                "title": anchor["name"], "point": anchor["coordinates"],
+                "type": "patrol", "accuracy_km": anchor["uncertaintyKm"],
+                "basis": ("Примерное положение исторического блокпоста на Н-20, по "
+                          "геопривязке 2016 года. Официальное сообщение ОБСЕ "
+                          "подтверждает ориентир: 650 м южнее места происшествия "
+                          "на ул. Ленина. Не GPS конкретного патруля февраля 2022 года"),
+                "referenceUrl": anchor["sourceUrl"]}
+    if re.search(r"\bблокпост\b", primary) and "кременец" in primary:
+        anchor = LANDMARKS["Блокпост Кременец (Н-15)"]
+        if not matches_reported_reference_distance(n, anchor["coordinates"]):
+            return None
+        return {"site_id": site_key("checkpoint", anchor["name"]),
+                "title": anchor["name"], "point": anchor["coordinates"],
+                "type": "patrol", "accuracy_km": anchor["uncertaintyKm"],
+                "basis": ("Гипотеза: пересечение трассы Н-15 с дорогой на север к "
+                          "комбинату «Каргилл». ОБСЕ подтверждает блокпост на Н-15 "
+                          "возле комбината, но не сам перекрёсток. Модельный радиус "
+                          "неопределённости 800 м; не GPS патруля февраля 2022 года"),
+                "referenceUrl": anchor["sourceUrl"]}
     # A checkpoint is not the settlement itself: its location must be verified
     # as a distinct landmark before mapping, even if the settlement is known.
     if re.search(r"\b(?:кпвв|блокпост)\b", primary):
