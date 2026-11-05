@@ -16,6 +16,7 @@
     {"name": "Черненко", "aliases": ["черненко"], "coordinates": [37.744562, 47.226040], "sourceUrl": "https://maps.visicom.ua/i/STL1NMCZZ"},
     {"name": "Безыменное", "aliases": ["безыменное", "безыменного"], "coordinates": [37.93547, 47.10816], "sourceUrl": "https://mapcarta.com/13770040"},
     {"name": "Веселое (Донецкий аэропорт)", "aliases": ["веселое", "веселого"], "coordinates": [37.72782, 48.06347], "sourceUrl": "https://mapcarta.com/30571812"},
+    {"name": "Жабуньки", "aliases": ["жабуньки", "жабунек"], "coordinates": [37.699885, 48.062898], "sourceUrl": "https://yandex.ru/maps/?ll=37.699885%2C48.062898&mode=search&text=%D0%B6%D0%B0%D0%B1%D1%83%D0%BD%D1%8C%D0%BA%D0%B8&z=12"},
     {"name": "Золотое-2 (Карбонит)", "aliases": ["золотое-2", "золотое 2", "карбонит"], "coordinates": [38.485, 48.72236], "sourceUrl": "https://mapcarta.com/N12638008882"},
     {"name": "Золотое-3 (Стахановец)", "aliases": ["золотое-3", "золотое 3", "стахановец"], "coordinates": [38.47614, 48.68119], "sourceUrl": "https://mapcarta.com/N5734653321"},
     {"name": "Золотое-4 (Родина; ориентир — шахта)", "aliases": ["золотое-4", "золотое 4", "родина"], "coordinates": [38.5373, 48.68457], "sourceUrl": "https://mapcarta.com/de/W509862883"},

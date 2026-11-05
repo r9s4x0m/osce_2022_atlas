@@ -181,6 +181,33 @@ class BuilderTests(unittest.TestCase):
         self.assertAlmostEqual(location["anchor_uncertainty_km"], .9, places=3)
         self.assertAlmostEqual(builder.location_of(position.replace("1,5 км", "1 км"))["accuracy_km"], .05)
 
+    def test_zhabunki_yandex_reference_recovers_official_patrol_descriptions(self):
+        # Yandex Maps settlement marker, independently consistent with the
+        # OSCE's 9 km NW of Donetsk (not a patrol's precise GPS position).
+        anchor = [37.699885, 48.062898]
+        capital = builder.CAPITAL_POINTS["донецка"]
+        self.assertAlmostEqual(builder.distance_km(capital, anchor), 9.0, delta=1.0)
+        azimuth = builder.bearing_deg(capital, anchor)
+        self.assertLess(abs((azimuth - 315 + 180) % 360 - 180), 22.5)
+
+        direct = ("н. п. Жaбуньки (неподконтрольный правительству, "
+                  "9 км к СЗ от Донецка)")
+        offset = ("примерно 1 км к ВСВ от н. п. Жaбуньки "
+                  "(неподконтрольный правительству, 9 км к СЗ от Донецка)")
+        settlement = builder.location_of(direct)
+        patrol = builder.location_of(offset)
+        self.assertIsNotNone(settlement)
+        self.assertIsNotNone(patrol)
+        self.assertEqual(settlement["type"], "patrol")
+        self.assertAlmostEqual(settlement["point"][0], anchor[0], places=6)
+        self.assertAlmostEqual(settlement["point"][1], anchor[1], places=6)
+        expected = builder.destination(anchor, 67.5, 1.0)
+        self.assertAlmostEqual(patrol["point"][0], expected[0], places=6)
+        self.assertAlmostEqual(patrol["point"][1], expected[1], places=6)
+        self.assertAlmostEqual(patrol["accuracy_km"], .05)
+        self.assertEqual(patrol["anchor_uncertainty_km"], .9)
+        self.assertIn("yandex.ru/maps/", patrol["referenceUrl"])
+
     def test_camera_coordinates_apply_bearings_and_preserve_camera_identity(self):
         near_shyrokyne = builder.location_of(
             "камера СММ в 1 км к ЮЗ от н. п. Широкино (подконтрольный правительству, 100 км к Ю от Донецка)")
